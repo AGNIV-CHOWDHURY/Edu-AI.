@@ -28,6 +28,7 @@ Gemini 2.5 Flash powers every intelligent feature in EduAI:
 | **Study Schedule Planner** | Allocates weekly study hours across students — more hours to Weak students, day-by-day schedule with subject focus areas |
 | **Intervention Group Planner** | Clusters struggling students into 2–4 groups by shared weaknesses for efficient batch tutoring sessions |
 | **Progress Trajectory Analysis** | Analyses a student's checkpoint history and predicts their category trend over the next 4 weeks |
+| Taken help from Google Gemini and Google AI Studio for frontend coding..|
 
 **SDK initialisation:**
 ```python
