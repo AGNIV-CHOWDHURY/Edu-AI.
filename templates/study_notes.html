@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block title %}Study Notes – {{ student.name }}{% endblock %}
+{% block extra_head %}
+<style>
+.sn-page { padding: 5rem 2rem 3rem; max-width: 1100px; margin: 0 auto; }
+.page-header { margin-bottom: 1.75rem; }
+.page-header h1 { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; }
+.page-header p  { color:var(--text3); font-size:0.9rem; margin-top:0.3rem; }
+
+.student-pill { display:inline-flex; align-items:center; gap:0.5rem; background:var(--surface);
+  border:1px solid var(--border); border-radius:999px; padding:0.4rem 1rem;
+  font-size:0.85rem; margin-bottom:1.5rem; }
+.cat-badge { padding:0.2rem 0.7rem; border-radius:999px; font-size:0.75rem; font-weight:700; }
+.cat-Weak    { background:rgba(255,107,107,0.15); color:var(--danger); }
+.cat-Average { background:rgba(108,142,255,0.15); color:var(--accent); }
+.cat-Strong  { background:rgba(6,214,160,0.15);  color:var(--strong); }
+
+/* Generate form */
+.gen-bar { display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; margin-bottom:2.5rem;
+  padding:1.25rem 1.5rem; background:var(--surface); border:1px solid var(--border); border-radius:14px; }
+.gen-bar label { font-size:0.85rem; font-weight:600; color:var(--text2); white-space:nowrap; }
+.gen-bar select { flex:1; min-width:160px; background:var(--bg); border:1px solid var(--border);
+  color:var(--text); border-radius:8px; padding:0.5rem 0.75rem; font-size:0.9rem; }
+.gen-btn { display:inline-flex; align-items:center; gap:0.5rem; white-space:nowrap;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff; border:none; padding:0.65rem 1.25rem; border-radius:var(--radius);
+  cursor:pointer; font-weight:600; font-size:0.88rem; }
+.gen-btn:hover { opacity:0.9; }
+
+/* Notes grid */
+.notes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:1.5rem; }
+.note-card { background:var(--surface); border:1px solid var(--border); border-radius:16px;
+  padding:1.5rem; display:flex; flex-direction:column; gap:0.85rem; position:relative; }
+.note-card:hover { border-color:var(--accent); }
+.note-header { display:flex; align-items:center; justify-content:space-between; gap:0.5rem; }
+.note-subject { font-family:'Syne',sans-serif; font-size:1rem; font-weight:800; color:var(--text); }
+.note-cat { font-size:0.72rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:99px; }
+.note-date { font-size:0.75rem; color:var(--text3); }
+
+/* Markdown content rendered inside card */
+.note-preview { font-size:0.82rem; color:var(--text2); line-height:1.6; max-height:160px;
+  overflow:hidden; position:relative; }
+.note-preview::after { content:''; position:absolute; bottom:0; left:0; right:0; height:40px;
+  background:linear-gradient(transparent, var(--surface)); pointer-events:none; }
+
+/* Expanded full note */
+.note-full { display:none; font-size:0.85rem; color:var(--text2); line-height:1.7; }
+.note-full h2 { font-family:'Syne',sans-serif; font-size:0.92rem; font-weight:700; color:var(--text);
+  margin:1rem 0 0.4rem; padding-bottom:0.25rem; border-bottom:1px solid var(--border); }
+.note-full ul { padding-left:1.2rem; margin:0.4rem 0; }
+.note-full li { margin-bottom:0.25rem; }
+
+.note-actions { display:flex; gap:0.5rem; margin-top:auto; padding-top:0.5rem;
+  border-top:1px solid var(--border); }
+.btn-expand { flex:1; background:rgba(56,189,248,0.1); color:var(--accent);
+  border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:0.45rem;
+  font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+.btn-expand:hover { background:rgba(56,189,248,0.2); }
+.btn-del { background:rgba(248,113,113,0.1); color:var(--danger);
+  border:1px solid rgba(248,113,113,0.25); border-radius:8px; padding:0.45rem 0.7rem;
+  font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+.btn-del:hover { background:rgba(248,113,113,0.2); }
+
+.empty-state { text-align:center; padding:3rem; color:var(--text3); }
+.back-link { color:var(--accent); text-decoration:none; font-size:0.85rem;
+  margin-bottom:1.5rem; display:inline-block; }
+.info-banner { display:flex; align-items:flex-start; gap:0.75rem; padding:1rem 1.25rem;
+  background:rgba(56,189,248,0.06); border:1px solid rgba(56,189,248,0.2);
+  border-radius:12px; font-size:0.83rem; color:var(--text2); line-height:1.5; margin-bottom:1.5rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="sn-page">
+  <a href="{{ url_for('student_resources', student_id=student.id) }}" class="back-link">← Back to Resources</a>
+
+  <div class="page-header">
+    <h1>🧠 AI Study Notes</h1>
+    <p>Personalised, level-appropriate study notes generated per subject for {{ student.name }}</p>
+  </div>
+
+  <div class="student-pill">
+    <span>{{ student.name }}</span>
+    <span class="cat-badge cat-{{ student.category }}">{{ student.category }}</span>
+  </div>
+
+  <div class="info-banner">
+    ℹ️ &nbsp; Notes are tailored to the student's academic level. <strong>Weak</strong> students get simplified fundamentals,
+    <strong>Average</strong> gets gap-filling content, and <strong>Strong</strong> gets advanced enrichment.
+    You can regenerate notes for any subject at any time.
+  </div>
+
+  <!-- Generate form -->
+  <form action="{{ url_for('generate_study_note', student_id=student.id) }}" method="POST">
+    <div class="gen-bar">
+      <label for="subjectSelect">📖 Generate notes for:</label>
+      <select name="subject" id="subjectSelect" required>
+        <option value="">— Select a subject —</option>
+        {% for s in subjects %}
+        <option value="{{ s }}">{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="gen-btn">✨ Generate Study Notes</button>
+    </div>
+  </form>
+
+  {% if notes %}
+  <div class="notes-grid">
+    {% for note in notes %}
+    <div class="note-card" id="card-{{ note.id }}">
+      <div class="note-header">
+        <span class="note-subject">{{ note.subject }}</span>
+        <span class="note-cat cat-{{ note.category }}">{{ note.category }}</span>
+      </div>
+      <div class="note-date">Generated {{ note.created_at.strftime('%b %d, %Y') }}</div>
+
+      <!-- Preview (truncated) -->
+      <div class="note-preview" id="preview-{{ note.id }}">
+        {{ note.notes_content | replace('**', '') | replace('##', '') | replace('#', '') | truncate(280) }}
+      </div>
+
+      <!-- Full rendered content (hidden by default) -->
+      <div class="note-full" id="full-{{ note.id }}">
+        {{ note.notes_content | markdown | safe }}
+      </div>
+
+      <div class="note-actions">
+        <button class="btn-expand" onclick="toggleNote({{ note.id }})" id="toggle-{{ note.id }}">
+          📄 Read Full Notes
+        </button>
+        <form action="{{ url_for('delete_study_note', student_id=student.id, note_id=note.id) }}"
+              method="POST" onsubmit="return confirm('Delete these notes?')">
+          <button type="submit" class="btn-del">🗑</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size:3rem;margin-bottom:1rem;">📓</div>
+    <p>No study notes yet. Select a subject above and click <strong>Generate Study Notes</strong>.</p>
+    <p style="font-size:0.82rem;margin-top:0.5rem;color:var(--text3);">
+      AI will create personalised notes matched to {{ student.name }}'s level.
+    </p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function toggleNote(id) {
+  const preview = document.getElementById('preview-' + id);
+  const full    = document.getElementById('full-' + id);
+  const btn     = document.getElementById('toggle-' + id);
+  const isOpen  = full.style.display === 'block';
+  preview.style.display = isOpen ? 'block' : 'none';
+  full.style.display    = isOpen ? 'none'  : 'block';
+  btn.textContent       = isOpen ? '📄 Read Full Notes' : '📄 Collapse Notes';
+}
+</script>
+{% endblock %}

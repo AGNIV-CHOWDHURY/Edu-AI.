@@ -1,0 +1,15 @@
+flask==3.0.3
+flask-sqlalchemy==3.1.1
+flask-login==0.6.3
+flask-bcrypt==1.0.1
+sqlalchemy==2.0.30
+pinecone-client==3.2.2
+google-genai>=1.0.0
+python-dotenv==1.0.1
+pypdf2==3.0.1
+werkzeug==3.0.3
+gunicorn==22.0.0
+pillow
+pdfplumber==0.11.1
+requests==2.32.3
+psycopg2-binary==2.9.9

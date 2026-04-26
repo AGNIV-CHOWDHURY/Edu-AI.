@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}Report Analysis — {{ report.student_name }}{% endblock %}
+{% block extra_head %}
+<style>
+.rr-page { padding: 5rem 2rem 2rem; max-width: 900px; margin: 0 auto; }
+.rr-header { margin-bottom: 2rem; }
+.rr-title { font-size: 2rem; font-weight: 800; margin-bottom: 0.3rem; }
+.rr-title span { background: linear-gradient(135deg, var(--accent3), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.rr-meta { color: var(--text3); font-size: 0.85rem; }
+
+.analysis-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 2rem;
+  animation: fadeUp 0.5s ease;
+}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.analysis-content {
+  font-size: 0.9rem;
+  color: var(--text2);
+  line-height: 1.8;
+}
+
+/* Markdown-like styling for Gemini output */
+.analysis-content h1 { font-family: 'Syne', sans-serif; font-size: 1.4rem; color: var(--text); margin: 1.5rem 0 0.75rem; font-weight: 800; }
+.analysis-content h2 { font-family: 'Syne', sans-serif; font-size: 1.15rem; color: var(--text); margin: 1.25rem 0 0.6rem; font-weight: 700; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+.analysis-content h3 { font-family: 'Syne', sans-serif; font-size: 1rem; color: var(--accent); margin: 1rem 0 0.4rem; font-weight: 700; }
+.analysis-content p { margin-bottom: 0.75rem; }
+.analysis-content ul, .analysis-content ol { padding-left: 1.25rem; margin-bottom: 0.75rem; }
+.analysis-content li { margin-bottom: 0.4rem; }
+.analysis-content strong { color: var(--text); font-weight: 600; }
+.analysis-content em { color: var(--accent3); font-style: italic; }
+.analysis-content hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+.highlight-box {
+  background: rgba(108,142,255,0.07);
+  border: 1px solid rgba(108,142,255,0.2);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+}
+
+.gemini-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(6,214,160,0.1);
+  border: 1px solid rgba(6,214,160,0.25);
+  font-size: 0.75rem;
+  color: var(--strong);
+  font-weight: 500;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rr-page">
+  <div class="rr-header" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;">
+    <div>
+      <p style="color:var(--text3);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.5rem;">Report Card Analysis</p>
+      <h1 class="rr-title"><span>{{ report.student_name }}</span></h1>
+      <p class="rr-meta">Analyzed on {{ report.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+      <div style="margin-top:0.75rem;">
+        <span class="gemini-badge">✨ Powered by Gemini AI</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:0.5rem;flex-shrink:0;">
+      <a href="{{ url_for('report_card') }}" class="btn btn-secondary btn-sm">+ New Analysis</a>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm">← Dashboard</a>
+    </div>
+  </div>
+
+  <div class="analysis-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);">AI Analysis Report</div>
+        <div style="font-size:0.8rem;color:var(--text3);margin-top:0.25rem;">File: {{ report.filename }}</div>
+      </div>
+      <button onclick="window.print()" class="btn btn-secondary btn-sm">🖨️ Print</button>
+    </div>
+
+    <div class="analysis-content" id="analysisContent">
+      {{ report.analysis | safe }}
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:2rem;display:flex;gap:1rem;justify-content:center;">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+    <a href="{{ url_for('report_card') }}" class="btn btn-primary">Analyze Another</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Convert markdown-like content from Gemini to HTML
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('analysisContent');
+  let html = el.innerHTML;
+
+  // Convert **bold** to <strong>
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Convert *italic* to <em>
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  // Convert ### Heading 3
+  html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+  // Convert ## Heading 2
+  html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+  // Convert # Heading 1
+  html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+  // Convert bullet points
+  html = html.replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>');
+  // Wrap consecutive <li> in <ul>
+  html = html.replace(/(<li>.*?<\/li>\n?)+/gs, match => `<ul>${match}</ul>`);
+  // Convert numbered lists
+  html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+  // Convert --- to hr
+  html = html.replace(/^---+$/gm, '<hr>');
+  // Convert double newlines to paragraphs
+  html = html.replace(/\n\n+/g, '</p><p>');
+  // Wrap in paragraph tags
+  if (!html.startsWith('<')) html = '<p>' + html + '</p>';
+
+  el.innerHTML = html;
+});
+</script>
+{% endblock %}

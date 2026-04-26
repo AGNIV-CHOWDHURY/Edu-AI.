@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block extra_head %}
+<style>
+.dash-page { padding: 5rem 2rem 2rem; max-width: 1200px; margin: 0 auto; }
+
+.dash-hero {
+  margin-bottom: 2rem;
+}
+.dash-greeting {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 0.4rem;
+}
+.dash-greeting span { 
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.dash-sub { color: var(--text3); font-size: 0.9rem; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  border-radius: inherit;
+}
+.stat-card.total::before { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+.stat-card.s-strong::before { background: var(--strong); }
+.stat-card.s-average::before { background: var(--accent); }
+.stat-card.s-weak::before { background: var(--danger); }
+
+.stat-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+.stat-card.total .stat-icon { background: rgba(108,142,255,0.15); }
+.stat-card.s-strong .stat-icon { background: rgba(6,214,160,0.15); }
+.stat-card.s-average .stat-icon { background: rgba(108,142,255,0.12); }
+.stat-card.s-weak .stat-icon { background: rgba(255,107,107,0.15); }
+
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+.stat-card.total .stat-num { color: var(--accent); }
+.stat-card.s-strong .stat-num { color: var(--strong); }
+.stat-card.s-average .stat-num { color: var(--accent); }
+.stat-card.s-weak .stat-num { color: var(--danger); }
+
+.stat-label { font-size: 0.78rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 500; }
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.5rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.student-table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  overflow: hidden;
+}
+
+.sidebar-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.chart-donut {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 1.5rem;
+}
+.chart-donut svg { transform: rotate(-90deg); }
+.chart-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.chart-center-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.chart-center-label { font-size: 0.65rem; color: var(--text3); text-transform: uppercase; }
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--text2);
+}
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.legend-val { margin-left: auto; font-weight: 600; color: var(--text); }
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text3);
+}
+.empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.empty-title { font-family: 'Syne', sans-serif; font-size: 1rem; margin-bottom: 0.4rem; color: var(--text2); }
+
+.action-row { display: flex; gap: 0.5rem; }
+
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .dash-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-page">
+  <div class="dash-hero">
+    <h1 class="dash-greeting">Hello, <span>{{ current_user.name.split()[0] }}</span> 👋</h1>
+    <p class="dash-sub">Here's your class overview for today</p>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card total">
+      <div class="stat-icon">🎓</div>
+      <div class="stat-num">{{ total }}</div>
+      <div class="stat-label">Total Students</div>
+    </div>
+    <div class="stat-card s-strong">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-num">{{ strong }}</div>
+      <div class="stat-label">Strong</div>
+    </div>
+    <div class="stat-card s-average">
+      <div class="stat-icon">📊</div>
+      <div class="stat-num">{{ average }}</div>
+      <div class="stat-label">Average</div>
+    </div>
+    <div class="stat-card s-weak">
+      <div class="stat-icon">⚡</div>
+      <div class="stat-num">{{ weak }}</div>
+      <div class="stat-label">Need Support</div>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- Student Table -->
+    <div>
+      <div class="section-header">
+        <h2 class="section-title">All Students</h2>
+        <a href="{{ url_for('add_student') }}" class="btn btn-primary btn-sm">+ Add Student</a>
+      </div>
+
+      <div class="student-table-wrap">
+        {% if students %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Marks</th>
+                <th>Attendance</th>
+                <th>Assignments</th>
+                <th>Category</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in students %}
+              <tr>
+                <td>
+                  <span style="font-weight:600;color:var(--text);">{{ s.name }}</span>
+                  <div style="font-size:0.72rem;color:var(--text3);">{{ s.created_at.strftime('%b %d, %Y') }}</div>
+                </td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <span>{{ s.marks }}/100</span>
+                  </div>
+                  <div class="progress-bar-wrap mt-1" style="width:80px">
+                    <div class="progress-bar-fill" style="width:{{ s.marks }}%;background:{% if s.marks >= 75 %}var(--strong){% elif s.marks >= 50 %}var(--accent){% else %}var(--danger){% endif %}"></div>
+                  </div>
+                </td>
+                <td>{{ s.attendance }}%</td>
+                <td>{{ s.assignments }}/100</td>
+                <td>
+                  <span class="badge badge-{{ s.category.lower() if s.category else 'average' }}">{{ s.category or 'N/A' }}</span>
+                </td>
+                <td>
+                  <div class="action-row">
+                    <a href="{{ url_for('student_result', student_id=s.id) }}" class="btn btn-secondary btn-sm">View</a>
+                    <form method="POST" action="{{ url_for('delete_student', student_id=s.id) }}" style="display:inline" onsubmit="return confirm('Delete this student?')">
+                      <button type="submit" class="btn btn-danger btn-sm">Del</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">🎒</div>
+          <div class="empty-title">No students yet</div>
+          <p class="text-sm text-muted">Add your first student to get started</p>
+          <a href="{{ url_for('add_student') }}" class="btn btn-primary" style="margin-top:1rem;">+ Add Student</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+      <!-- Donut Chart -->
+      <div class="sidebar-card">
+        <div class="section-title mb-2">Performance Breakdown</div>
+        {% if total > 0 %}
+        {% set s_pct = (strong / total * 100)|round|int %}
+        {% set a_pct = (average / total * 100)|round|int %}
+        {% set w_pct = (weak / total * 100)|round|int %}
+        {% set circ = 339.3 %}
+        {% set s_dash = (s_pct / 100 * circ)|round(1) %}
+        {% set a_dash = (a_pct / 100 * circ)|round(1) %}
+        {% set w_dash = (w_pct / 100 * circ)|round(1) %}
+
+        <div class="chart-donut">
+          <svg viewBox="0 0 120 120" width="140" height="140">
+            <circle cx="60" cy="60" r="54" fill="none" stroke="var(--border)" stroke-width="12"/>
+            <!-- Strong -->
+            <circle cx="60" cy="60" r="54" fill="none" stroke="var(--strong)" stroke-width="12"
+              stroke-dasharray="{{ s_dash }} {{ circ }}"
+              stroke-dashoffset="0" stroke-linecap="butt"/>
+            <!-- Average -->
+            <circle cx="60" cy="60" r="54" fill="none" stroke="var(--accent)" stroke-width="12"
+              stroke-dasharray="{{ a_dash }} {{ circ }}"
+              stroke-dashoffset="-{{ s_dash }}" stroke-linecap="butt"/>
+            <!-- Weak -->
+            <circle cx="60" cy="60" r="54" fill="none" stroke="var(--danger)" stroke-width="12"
+              stroke-dasharray="{{ w_dash }} {{ circ }}"
+              stroke-dashoffset="-{{ s_dash + a_dash }}" stroke-linecap="butt"/>
+          </svg>
+          <div class="chart-center">
+            <div class="chart-center-num">{{ total }}</div>
+            <div class="chart-center-label">students</div>
+          </div>
+        </div>
+        {% else %}
+        <div style="text-align:center;color:var(--text3);padding:1rem;font-size:0.85rem;">No data yet</div>
+        {% endif %}
+
+        <div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--strong)"></div>
+            Strong
+            <span class="legend-val">{{ strong }}</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--accent)"></div>
+            Average
+            <span class="legend-val">{{ average }}</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--danger)"></div>
+            Need Support
+            <span class="legend-val">{{ weak }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="sidebar-card">
+        <div class="section-title mb-2">Quick Actions</div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;">
+          <a href="{{ url_for('add_student') }}" class="btn btn-primary" style="justify-content:center;">+ Add Student</a>
+          <a href="{{ url_for('report_card') }}" class="btn btn-secondary" style="justify-content:center;">📄 Analyze Report Card</a>
+        </div>
+      </div>
+
+      <!-- Recent Reports -->
+      {% if reports %}
+      <div class="sidebar-card">
+        <div class="section-title mb-2">Recent Reports</div>
+        {% for r in reports %}
+        <a href="{{ url_for('report_result', report_id=r.id) }}" style="text-decoration:none;">
+          <div style="padding:0.6rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:0.85rem;color:var(--text);font-weight:500;">{{ r.student_name }}</div>
+              <div style="font-size:0.72rem;color:var(--text3);">{{ r.created_at.strftime('%b %d') }}</div>
+            </div>
+            <span style="font-size:0.7rem;color:var(--accent);">View →</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

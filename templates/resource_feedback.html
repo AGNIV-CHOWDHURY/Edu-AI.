@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% block title %}Resource Feedback – {{ student.name }}{% endblock %}
+{% block extra_head %}
+<style>
+.fb-page { padding: 5rem 2rem 3rem; max-width: 960px; margin: 0 auto; }
+.page-header { margin-bottom: 1.75rem; }
+.page-header h1 { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; }
+.page-header p  { color:var(--text3); font-size:0.9rem; margin-top:0.3rem; }
+
+.student-pill { display:inline-flex; align-items:center; gap:0.5rem; background:var(--surface);
+  border:1px solid var(--border); border-radius:999px; padding:0.4rem 1rem;
+  font-size:0.85rem; margin-bottom:1.5rem; }
+.cat-badge { padding:0.2rem 0.7rem; border-radius:999px; font-size:0.75rem; font-weight:700; }
+.cat-Weak    { background:rgba(255,107,107,0.15); color:var(--danger); }
+.cat-Average { background:rgba(108,142,255,0.15); color:var(--accent); }
+.cat-Strong  { background:rgba(6,214,160,0.15);  color:var(--strong); }
+
+.info-banner { display:flex; align-items:flex-start; gap:0.75rem; padding:1rem 1.25rem;
+  background:rgba(56,189,248,0.06); border:1px solid rgba(56,189,248,0.2);
+  border-radius:12px; font-size:0.83rem; color:var(--text2); line-height:1.5; margin-bottom:2rem; }
+
+/* Subject groups */
+.subj-section { margin-bottom:2.5rem; }
+.subj-label { font-family:'Syne',sans-serif; font-size:0.85rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.08em; padding:0.35rem 0.9rem;
+  border-radius:99px; display:inline-block; margin-bottom:1rem;
+  background:var(--surface); color:var(--text2); border:1px solid var(--border); }
+
+/* Feedback cards */
+.fb-card { background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  padding:1.25rem 1.5rem; margin-bottom:0.85rem; display:flex;
+  align-items:center; gap:1rem; flex-wrap:wrap; }
+.fb-card:hover { border-color:var(--accent); }
+.fb-left  { flex:1; min-width:200px; display:flex; flex-direction:column; gap:0.25rem; }
+.fb-type  { display:inline-flex; align-items:center; gap:0.35rem; font-size:0.68rem;
+  font-weight:700; text-transform:uppercase; padding:0.2rem 0.55rem;
+  border-radius:99px; width:fit-content; }
+.badge-book { background:rgba(129,140,248,0.15); color:var(--accent2); }
+.badge-yt   { background:rgba(248,113,113,0.15); color:var(--danger); }
+.fb-title   { font-weight:700; font-size:0.92rem; color:var(--text); }
+.fb-reason  { font-size:0.79rem; color:var(--text3); }
+
+/* Toggle */
+.fb-toggle { display:flex; gap:0.5rem; }
+.fb-btn { padding:0.45rem 1rem; border-radius:8px; border:1px solid var(--border);
+  font-size:0.82rem; font-weight:600; cursor:pointer; background:var(--bg);
+  color:var(--text2); transition:all 0.18s; }
+.fb-btn.yes { border-color:var(--strong); color:var(--strong);
+  background:rgba(6,214,160,0.1); }
+.fb-btn.no  { border-color:var(--danger); color:var(--danger);
+  background:rgba(255,107,107,0.1); }
+.fb-btn:hover { opacity:0.85; }
+
+/* Radio hidden, styled via JS */
+.fb-radio { display:none; }
+
+/* Action bar */
+.action-bar { display:flex; gap:1rem; flex-wrap:wrap; padding:1.5rem;
+  background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  margin-top:1.5rem; align-items:center; justify-content:space-between; }
+.btn-save { padding:0.7rem 1.4rem; border-radius:var(--radius); border:none;
+  font-weight:600; font-size:0.9rem; cursor:pointer; transition:opacity 0.2s; }
+.btn-save-only { background:rgba(56,189,248,0.15); color:var(--accent);
+  border:1px solid rgba(56,189,248,0.3); }
+.btn-save-only:hover { background:rgba(56,189,248,0.25); }
+.btn-regen { background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff; }
+.btn-regen:hover { opacity:0.88; }
+.action-hint { font-size:0.8rem; color:var(--text3); }
+
+.back-link { color:var(--accent); text-decoration:none; font-size:0.85rem;
+  margin-bottom:1.5rem; display:inline-block; }
+.empty-state { text-align:center; padding:3rem; color:var(--text3); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="fb-page">
+  <a href="{{ url_for('student_resources', student_id=student.id) }}" class="back-link">← Back to Resources</a>
+
+  <div class="page-header">
+    <h1>📊 Resource Feedback</h1>
+    <p>Rate which resources worked for {{ student.name }} — AI will use your feedback to regenerate smarter recommendations</p>
+  </div>
+
+  <div class="student-pill">
+    <span>{{ student.name }}</span>
+    <span class="cat-badge cat-{{ student.category }}">{{ student.category }}</span>
+  </div>
+
+  <div class="info-banner">
+    💡 &nbsp; For each book or video, mark whether it <strong>worked</strong> (student engaged / improved) or
+    <strong>didn't work</strong> (student found it unhelpful or too hard/easy).
+    Click <strong>Save &amp; Regenerate</strong> and the AI will swap out the ineffective resources
+    with better-matched alternatives.
+  </div>
+
+  {% if recommendations %}
+  <form method="POST" action="{{ url_for('resource_feedback', student_id=student.id) }}" id="fbForm">
+
+    {# Group by subject #}
+    {% set subjects_seen = [] %}
+    {% for r in recommendations %}
+      {% set subj = r.get('subject', 'General') %}
+      {% if subj not in subjects_seen %}{% set _ = subjects_seen.append(subj) %}{% endif %}
+    {% endfor %}
+
+    {% for subject in subjects_seen %}
+      {% set group = [] %}
+      {% for r in recommendations %}
+        {% if r.get('subject', 'General') == subject %}{% set _ = group.append(r) %}{% endif %}
+      {% endfor %}
+
+      <div class="subj-section">
+        <div class="subj-label">📚 {{ subject }}</div>
+
+        {% for r in group %}
+        {% set is_yt = r.get('type','') == 'youtube' %}
+        {% set key   = r.get('subject') ~ '|' ~ r.get('type') ~ '|' ~ r.get('title') %}
+        {% set prev  = existing_feedback.get(key) %}
+        <div class="fb-card" id="card-{{ loop.index }}-{{ subject | replace(' ', '_') }}">
+          <div class="fb-left">
+            <div class="fb-type {{ 'badge-yt' if is_yt else 'badge-book' }}">
+              {{ '▶ YouTube' if is_yt else '📖 Book' }}
+            </div>
+            <div class="fb-title">{{ r.get('title','') }}</div>
+            <div class="fb-reason">{{ r.get('reason','') }}</div>
+          </div>
+
+          <!-- Hidden radio inputs -->
+          <input class="fb-radio" type="radio" name="{{ key }}" value="yes"
+                 id="yes-{{ loop.index }}-{{ subject | replace(' ','_') }}"
+                 {% if prev == true %}checked{% endif %}>
+          <input class="fb-radio" type="radio" name="{{ key }}" value="no"
+                 id="no-{{ loop.index }}-{{ subject | replace(' ','_') }}"
+                 {% if prev == false %}checked{% endif %}>
+
+          <div class="fb-toggle">
+            <button type="button"
+                    class="fb-btn yes {% if prev == true %}active{% endif %}"
+                    data-key="{{ key }}" data-val="yes">
+              ✅ Worked
+            </button>
+            <button type="button"
+                    class="fb-btn no {% if prev == false %}active{% endif %}"
+                    data-key="{{ key }}" data-val="no">
+              ❌ Didn't Work
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    <div class="action-bar">
+      <span class="action-hint">Rate resources above, then save or regenerate.</span>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+        <button type="submit" name="action" value="save" class="btn-save btn-save-only">
+          💾 Save Feedback
+        </button>
+        <button type="submit" name="action" value="regenerate" class="btn-save btn-regen">
+          🔄 Save &amp; Regenerate Resources
+        </button>
+      </div>
+    </div>
+  </form>
+
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size:3rem;margin-bottom:1rem;">📭</div>
+    <p>No recommendations found. <a href="{{ url_for('student_resources', student_id=student.id) }}" style="color:var(--accent);">Generate resources first.</a></p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+// Toggle yes/no buttons and set hidden radios
+document.querySelectorAll('.fb-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const key = this.dataset.key;
+    const val = this.dataset.val;
+    // Update radios
+    document.querySelectorAll(`input[name="${CSS.escape(key)}"]`).forEach(r => {
+      r.checked = (r.value === val);
+    });
+    // Update button styles
+    const parent = this.closest('.fb-toggle');
+    parent.querySelectorAll('.fb-btn').forEach(b => {
+      b.classList.remove('yes', 'no');
+      if (b.dataset.val === 'yes') b.style.borderColor = '';
+      if (b.dataset.val === 'no')  b.style.borderColor = '';
+    });
+    this.classList.add(val);
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}EduAI{% endblock %} — Academic Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --bg2: #161820;
+  --surface: rgba(255,255,255,0.04);
+  --surface2: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf0;
+  --text2: #9499a8;
+  --text3: #5e6374;
+  --accent: #6c8eff;
+  --accent2: #8b5cf6;
+  --accent3: #06d6a0;
+  --danger: #ff6b6b;
+  --warning: #ffd166;
+  --strong: #06d6a0;
+  --average: #6c8eff;
+  --weak: #ff6b6b;
+  --radius: 14px;
+  --radius2: 20px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Gradient mesh background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(108,142,255,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139,92,246,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(6,214,160,0.03) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body > * { position: relative; z-index: 1; }
+
+h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
+
+/* NAVBAR */
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 0 2rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15,17,23,0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-brand {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--text);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-brand span {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nav-link {
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.nav-link:hover, .nav-link.active {
+  color: var(--text);
+  background: var(--surface2);
+}
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: white;
+}
+
+.btn-logout {
+  color: var(--text3);
+  font-size: 0.8rem;
+  text-decoration: none;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.btn-logout:hover { color: var(--danger); border-color: var(--danger); }
+
+/* PAGE WRAPPER */
+.page {
+  padding-top: 80px;
+  min-height: 100vh;
+}
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1.75rem;
+  backdrop-filter: blur(10px);
+}
+
+.card-glass {
+  background: rgba(255,255,255,0.035);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  backdrop-filter: blur(16px);
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: white;
+  box-shadow: 0 4px 20px rgba(108,142,255,0.3);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(108,142,255,0.45); }
+
+.btn-secondary {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--border); }
+
+.btn-danger {
+  background: rgba(255,107,107,0.15);
+  color: var(--danger);
+  border: 1px solid rgba(255,107,107,0.3);
+}
+.btn-danger:hover { background: rgba(255,107,107,0.25); }
+
+.btn-sm { padding: 0.45rem 0.9rem; font-size: 0.8rem; }
+
+/* FORMS */
+.form-group { margin-bottom: 1.25rem; }
+.form-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.form-control {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  outline: none;
+}
+.form-control:focus {
+  border-color: var(--accent);
+  background: rgba(108,142,255,0.07);
+  box-shadow: 0 0 0 3px rgba(108,142,255,0.15);
+}
+.form-control::placeholder { color: var(--text3); }
+.form-hint { font-size: 0.78rem; color: var(--text3); margin-top: 0.35rem; }
+
+/* FLASH MESSAGES */
+.flash-container {
+  position: fixed;
+  top: 80px; right: 1.5rem;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.flash {
+  padding: 0.8rem 1.2rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  backdrop-filter: blur(12px);
+  border: 1px solid;
+  animation: slideIn 0.3s ease;
+  max-width: 320px;
+}
+.flash.error { background: rgba(255,107,107,0.15); border-color: rgba(255,107,107,0.3); color: #ff9999; }
+.flash.success { background: rgba(6,214,160,0.12); border-color: rgba(6,214,160,0.3); color: var(--strong); }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* BADGES */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.badge-strong { background: rgba(6,214,160,0.15); color: var(--strong); border: 1px solid rgba(6,214,160,0.3); }
+.badge-average { background: rgba(108,142,255,0.15); color: var(--accent); border: 1px solid rgba(108,142,255,0.3); }
+.badge-weak { background: rgba(255,107,107,0.15); color: var(--danger); border: 1px solid rgba(255,107,107,0.3); }
+
+/* TABLES */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 0.9rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.025); color: var(--text); }
+
+/* UTILS */
+.text-muted { color: var(--text3); }
+.text-sm { font-size: 0.85rem; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.gap-1 { gap: 0.5rem; }
+.gap-2 { gap: 1rem; }
+.flex { display: flex; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+/* Stat card */
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1.5rem;
+  text-align: center;
+}
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.4rem;
+}
+.stat-label { font-size: 0.8rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* Progress bar */
+.progress-bar-wrap { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+
+@media (max-width: 768px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .navbar { padding: 0 1rem; }
+  .page { padding-top: 72px; }
+}
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{% if current_user.is_authenticated %}
+<nav class="navbar">
+  <a href="{{ url_for('dashboard') }}" class="nav-brand">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect width="20" height="20" rx="6" fill="url(#ng)"/>
+      <path d="M5 10L8 13L15 7" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <defs><linearGradient id="ng" x1="0" y1="0" x2="20" y2="20"><stop stop-color="#6c8eff"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+    </svg>
+    Edu<span>AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a>
+    <a href="{{ url_for('add_student') }}" class="nav-link {% if request.endpoint == 'add_student' %}active{% endif %}">Add Student</a>
+    <a href="{{ url_for('report_card') }}" class="nav-link {% if request.endpoint == 'report_card' %}active{% endif %}">Report Card</a>
+    <a href="{{ url_for('bulk_import') }}" class="nav-link {% if request.endpoint in ['bulk_import','bulk_import_result'] %}active{% endif %}">Bulk Import</a>
+    <a href="{{ url_for('resource_budget') }}" class="nav-link {% if request.endpoint in ['resource_budget','budget_plan_detail'] %}active{% endif %}">Study Schedule</a>
+    <a href="{{ url_for('intervention_groups') }}" class="nav-link {% if request.endpoint == 'intervention_groups' %}active{% endif %}">Groups</a>
+    <a href="{{ url_for('video_classes') }}" class="nav-link {% if request.endpoint in ['video_classes','schedule_class','join_class'] %}active{% endif %}">📹 Classes</a>  </div>
+  <div class="nav-user">
+    <div class="nav-avatar">{{ current_user.name[0].upper() }}</div>
+    <span style="font-size:0.85rem;color:var(--text2);">{{ current_user.name.split()[0] }}</span>
+    <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+  </div>
+</nav>
+{% endif %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-container">
+  {% for cat, msg in messages %}
+  <div class="flash {{ cat }}">{{ msg }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<script>
+// Auto-dismiss flash messages
+setTimeout(() => {
+  document.querySelectorAll('.flash').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(100%)';
+    el.style.transition = 'all 0.4s';
+    setTimeout(() => el.remove(), 400);
+  });
+}, 4000);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

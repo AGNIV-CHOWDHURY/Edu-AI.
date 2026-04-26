@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Schedule a Class{% endblock %}
+{% block content %}
+<style>
+.form-card { max-width:620px; margin:0 auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius2); padding:2.5rem; }
+.form-group { margin-bottom:1.5rem; }
+label { display:block; font-size:.85rem; font-weight:600; color:var(--text2); margin-bottom:.5rem; letter-spacing:.04em; text-transform:uppercase; }
+input, textarea, select { width:100%; background:var(--surface2); border:1px solid var(--border2); border-radius:10px; padding:.75rem 1rem; color:var(--text); font-size:.95rem; font-family:inherit; outline:none; transition:border-color .2s; }
+input:focus, textarea:focus, select:focus { border-color:var(--accent); }
+textarea { resize:vertical; min-height:90px; }
+.btn-submit { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none; padding:.8rem 2rem; border-radius:12px; font-weight:700; font-size:1rem; cursor:pointer; width:100%; font-family:'Syne',sans-serif; }
+.btn-submit:hover { opacity:.9; }
+.btn-back { display:inline-flex; align-items:center; gap:.4rem; color:var(--text2); text-decoration:none; font-size:.9rem; margin-bottom:1.5rem; }
+.btn-back:hover { color:var(--text); }
+.hint { font-size:.8rem; color:var(--text3); margin-top:.35rem; }
+</style>
+
+<a href="{{ url_for('video_classes') }}" class="btn-back">← Back to Classes</a>
+
+<div class="form-card">
+  <h2 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:.5rem;">📅 Schedule a Class</h2>
+  <p style="color:var(--text2);margin-bottom:2rem;font-size:.95rem;">Set up a live video class for your students. They'll join via a link you share.</p>
+
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in msgs %}
+      <div style="margin-bottom:1.25rem;padding:.9rem 1.2rem;border-radius:10px;background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.3);color:var(--danger);">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST">
+    <div class="form-group">
+      <label>Class Title *</label>
+      <input type="text" name="title" placeholder="e.g. Chapter 5: Quadratic Equations" required maxlength="200">
+    </div>
+
+    <div class="form-group">
+      <label>Description</label>
+      <textarea name="description" placeholder="What will you cover in this class? (optional)"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Date & Time *</label>
+      <input type="datetime-local" name="scheduled_at" required>
+      <div class="hint">All times are in UTC. Share the class link with students beforehand.</div>
+    </div>
+
+    <div class="form-group">
+      <label>Duration (minutes)</label>
+      <select name="duration_minutes">
+        <option value="30">30 minutes</option>
+        <option value="45">45 minutes</option>
+        <option value="60" selected>1 hour</option>
+        <option value="90">1.5 hours</option>
+        <option value="120">2 hours</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn-submit">🎥 Create Class</button>
+  </form>
+</div>
+{% endblock %}

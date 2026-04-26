@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Bulk CSV Import{% endblock %}
+{% block extra_head %}
+<style>
+.import-page { padding:5rem 2rem 2rem; max-width:800px; margin:0 auto; }
+.page-header { margin-bottom:2rem; }
+.page-header h1 { font-family:'Syne',sans-serif; font-size:1.7rem; font-weight:800; }
+.page-header p  { color:var(--text3); font-size:0.9rem; margin-top:0.3rem; }
+.upload-card { background:var(--surface); border:2px dashed var(--border);
+  border-radius:var(--radius2); padding:2.5rem; text-align:center; cursor:pointer;
+  transition:border-color 0.2s; margin-bottom:1.5rem; }
+.upload-card:hover { border-color:var(--accent); }
+.upload-icon { font-size:3rem; margin-bottom:1rem; }
+.upload-card h3 { font-family:'Syne',sans-serif; font-weight:700; margin-bottom:0.5rem; }
+.upload-card p  { color:var(--text3); font-size:0.85rem; }
+.file-input { display:none; }
+.chosen-file { font-size:0.85rem; color:var(--accent); margin-top:0.75rem; }
+.format-box { background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius2); padding:1.25rem 1.5rem; margin-bottom:1.5rem; }
+.format-box h3 { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; margin-bottom:0.75rem; }
+.code-block { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius);
+  padding:0.75rem 1rem; font-family:monospace; font-size:0.82rem; color:var(--text2); white-space:pre; }
+.submit-btn { background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff; border:none; padding:0.8rem 2rem; border-radius:var(--radius);
+  cursor:pointer; font-weight:600; font-size:0.9rem; width:100%; }
+.submit-btn:hover { opacity:0.9; }
+.submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="import-page">
+  <div class="page-header">
+    <h1>📋 Bulk Student Import</h1>
+    <p>Upload a CSV to import and auto-analyze multiple students at once, sorted by resource priority</p>
+  </div>
+
+  <div class="format-box">
+    <h3>Required CSV Format</h3>
+    <div class="code-block">name,marks,attendance,assignments
+Alice Smith,72,85,68
+Bob Kumar,45,60,50
+Carol Tan,91,95,88</div>
+    <p style="font-size:0.8rem;color:var(--text3);margin-top:0.6rem;">All values 0–100. Header row required. File must be UTF-8.</p>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" id="importForm">
+    <label class="upload-card" for="csv_file">
+      <div class="upload-icon">📂</div>
+      <h3>Click to choose CSV file</h3>
+      <p>or drag and drop here</p>
+      <div class="chosen-file" id="fileName">No file chosen</div>
+      <input type="file" name="csv_file" id="csv_file" class="file-input" accept=".csv" required>
+    </label>
+    <button type="submit" class="submit-btn" id="submitBtn">🚀 Import & Auto-Analyze All Students</button>
+  </form>
+</div>
+<script>
+document.getElementById('csv_file').addEventListener('change', function() {
+  document.getElementById('fileName').textContent = this.files[0]?.name || 'No file chosen';
+});
+document.getElementById('importForm').addEventListener('submit', function() {
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('submitBtn').textContent = '⏳ Analyzing students (this may take a moment)…';
+});
+</script>
+{% endblock %}

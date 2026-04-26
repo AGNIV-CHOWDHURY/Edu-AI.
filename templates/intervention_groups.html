@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Intervention Groups{% endblock %}
+{% block extra_head %}
+<style>
+.grp-page { padding:5rem 2rem 2rem; max-width:1050px; margin:0 auto; }
+.page-header { margin-bottom:2rem; }
+.page-header h1 { font-family:'Syne',sans-serif; font-size:1.7rem; font-weight:800; }
+.page-header p  { color:var(--text3); font-size:0.9rem; margin-top:0.3rem; }
+.gen-btn { display:inline-flex; align-items:center; gap:0.5rem;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff; border:none; padding:0.75rem 1.5rem; border-radius:var(--radius);
+  cursor:pointer; font-weight:600; font-size:0.9rem; margin-bottom:2rem; }
+.gen-btn:hover { opacity:0.9; }
+.student-preview { display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1.5rem; }
+.s-chip { padding:0.3rem 0.8rem; border-radius:999px; font-size:0.8rem; font-weight:500; }
+.s-Weak    { background:rgba(255,107,107,0.15); color:var(--danger); }
+.s-Average { background:rgba(108,142,255,0.15); color:var(--accent); }
+.groups-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.25rem; }
+.group-card { background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius2); padding:1.5rem; }
+.group-card h3 { font-family:'Syne',sans-serif; font-weight:700; font-size:0.95rem; margin-bottom:0.3rem; }
+.group-focus { color:var(--accent); font-size:0.8rem; font-weight:600; margin-bottom:1rem; }
+.group-students { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:1rem; }
+.gs-pill { background:var(--bg); border:1px solid var(--border); border-radius:999px;
+  padding:0.2rem 0.65rem; font-size:0.78rem; color:var(--text2); }
+.group-plan { font-size:0.83rem; color:var(--text2); line-height:1.6;
+  background:var(--bg); border-radius:var(--radius); padding:0.75rem; }
+.sessions-badge { display:inline-block; margin-top:0.75rem; padding:0.25rem 0.65rem;
+  background:rgba(108,142,255,0.12); color:var(--accent); border-radius:999px;
+  font-size:0.75rem; font-weight:600; }
+.empty-state { text-align:center; padding:3rem; color:var(--text3); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="grp-page">
+  <div class="page-header">
+    <h1>👥 Group Intervention Planner</h1>
+    <p>AI clusters struggling students by shared weaknesses for efficient batch tutoring</p>
+  </div>
+
+  <div class="student-preview">
+    {% for s in students %}
+    <span class="s-chip s-{{ s.category }}">{{ s.name }} ({{ s.category }})</span>
+    {% else %}
+    <span style="color:var(--text3);font-size:0.85rem;">No Weak/Average students found.</span>
+    {% endfor %}
+  </div>
+
+  {% if students %}
+  <form method="POST" id="groupForm">
+    <button type="submit" class="gen-btn" id="genBtn">✨ {% if groups %}Re-generate Groups{% else %}Generate Intervention Groups{% endif %}</button>
+    <span id="loadingMsg" style="display:none; margin-left:1rem; color:var(--text3); font-size:0.88rem;">⏳ AI is generating groups, please wait…</span>
+  </form>
+  {% endif %}
+
+  {% if groups %}
+  <div class="groups-grid">
+    {% for g in groups %}
+    {% set sids = g.student_ids | fromjson %}
+    <div class="group-card">
+      <h3>{{ g.group_name }}</h3>
+      <div class="group-focus">📍 {{ g.focus_area }}</div>
+      <div class="group-students">
+        {% for sid in sids %}
+        <span class="gs-pill">{{ id_to_name.get(sid, 'Student #' ~ sid) }}</span>
+        {% endfor %}
+      </div>
+      <div class="group-plan">{{ g.session_plan | replace('\n', '<br>') | safe }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% elif not students %}
+  <div class="empty-state">
+    <div style="font-size:3rem;margin-bottom:1rem;">📭</div>
+    <p>Add Weak or Average students first.</p>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size:3rem;margin-bottom:1rem;">🤖</div>
+    <p>Click <strong>Generate Intervention Groups</strong> to let AI cluster your students.</p>
+  </div>
+  {% endif %}
+</div>
+<script>
+// Show loading state when form is submitted
+const form = document.getElementById('groupForm');
+if (form) {
+  form.addEventListener('submit', function() {
+    const btn = document.getElementById('genBtn');
+    const msg = document.getElementById('loadingMsg');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Generating…'; }
+    if (msg) { msg.style.display = 'inline'; }
+  });
+}
+</script>
+{% endblock %}

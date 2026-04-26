@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}My Classes{% endblock %}
+{% block content %}
+<style>
+.classes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:1.5rem; }
+.class-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius2); padding:1.5rem; display:flex; flex-direction:column; gap:1rem; }
+.class-card.live { border-color:rgba(6,214,160,0.5); box-shadow:0 0 20px rgba(6,214,160,0.1); }
+.class-card.upcoming { border-color:rgba(108,142,255,0.4); }
+.class-card.past { opacity:.6; }
+.badge { display:inline-flex; align-items:center; gap:.4rem; padding:.25rem .75rem; border-radius:20px; font-size:.75rem; font-weight:600; }
+.badge-live { background:rgba(6,214,160,0.15); color:#06d6a0; }
+.badge-upcoming { background:rgba(108,142,255,0.15); color:#6c8eff; }
+.badge-past { background:rgba(255,255,255,0.06); color:var(--text2); }
+.class-title { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; }
+.class-meta { font-size:.85rem; color:var(--text2); display:flex; flex-wrap:wrap; gap:.75rem; }
+.btn-join { background:linear-gradient(135deg,#06d6a0,#059b74); color:#fff; border:none; padding:.55rem 1.2rem; border-radius:10px; font-weight:600; cursor:pointer; text-decoration:none; font-size:.9rem; display:inline-block; }
+.empty-state { text-align:center; padding:4rem 2rem; background:var(--surface); border:1px dashed var(--border2); border-radius:var(--radius2); }
+</style>
+
+<h1 style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:.5rem;">📹 My Classes</h1>
+<p style="color:var(--text2);margin-bottom:2rem;">Live and upcoming classes from your teacher</p>
+
+{% with msgs = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in msgs %}
+    <div style="margin-bottom:1rem;padding:.9rem 1.2rem;border-radius:10px;background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.3);color:var(--danger);">{{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+
+{% if classes %}
+<div class="classes-grid">
+  {% for vc in classes %}
+    {% set diff = (vc.scheduled_at - now).total_seconds() %}
+    {% if diff > 600 %}{% set status="upcoming" %}{% set badge_label="Upcoming" %}
+    {% elif diff >= -vc.duration_minutes * 60 %}{% set status="live" %}{% set badge_label="🔴 Live Now" %}
+    {% else %}{% set status="past" %}{% set badge_label="Ended" %}{% endif %}
+
+    <div class="class-card {{ status }}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;">
+        <div class="class-title">{{ vc.title }}</div>
+        <span class="badge badge-{{ status }}">{{ badge_label }}</span>
+      </div>
+      {% if vc.description %}<p style="font-size:.9rem;color:var(--text2);">{{ vc.description }}</p>{% endif %}
+      <div class="class-meta">
+        <span>📅 {{ vc.scheduled_at.strftime('%b %d, %Y') }}</span>
+        <span>🕐 {{ vc.scheduled_at.strftime('%I:%M %p') }} UTC</span>
+        <span>⏱ {{ vc.duration_minutes }} min</span>
+      </div>
+      {% if status in ['live','upcoming'] %}
+        <a href="{{ url_for('student_join_class', class_id=vc.id) }}" class="btn-join">
+          {% if status == 'live' %}🟢 Join Now{% else %}👀 Preview Room{% endif %}
+        </a>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div style="font-size:3rem;margin-bottom:1rem">🎥</div>
+  <h3 style="font-family:'Syne',sans-serif;font-size:1.3rem;margin-bottom:.75rem;">No classes yet</h3>
+  <p style="color:var(--text2);">Your teacher hasn't scheduled any classes yet. Check back soon!</p>
+</div>
+{% endif %}
+{% endblock %}

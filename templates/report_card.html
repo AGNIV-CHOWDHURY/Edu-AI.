@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% block title %}Report Card Analyzer{% endblock %}
+{% block extra_head %}
+<style>
+.rc-page { padding: 5rem 2rem 2rem; max-width: 680px; margin: 0 auto; }
+.page-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.3rem; }
+.page-title span { background: linear-gradient(135deg, var(--accent3), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+.upload-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 2rem;
+  animation: fadeUp 0.4s ease;
+}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+.drop-zone {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius2);
+  padding: 2.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.02);
+  position: relative;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(108,142,255,0.06);
+}
+.drop-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.drop-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.drop-title { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 0.3rem; }
+.drop-sub { color: var(--text3); font-size: 0.82rem; }
+.drop-selected {
+  background: rgba(6,214,160,0.07);
+  border: 1px solid rgba(6,214,160,0.25);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.drop-selected-icon { font-size: 1.2rem; }
+.drop-selected-name { font-size: 0.875rem; color: var(--strong); font-weight: 500; }
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.feature-item {
+  background: var(--surface2);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+}
+.feature-item-icon { font-size: 1.4rem; margin-bottom: 0.5rem; }
+.feature-item-label { font-size: 0.75rem; color: var(--text3); }
+
+.loading-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(15,17,23,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+}
+.loading-overlay.show { display: flex; }
+.spinner { width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--accent3); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-steps { display: flex; flex-direction: column; gap: 0.4rem; text-align: center; }
+.loading-steps span { font-size: 0.85rem; color: var(--text3); }
+.loading-steps span.active { color: var(--accent3); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text);">Analyzing Report Card...</div>
+  <div class="loading-steps">
+    <span id="s1" class="active">📄 Reading PDF...</span>
+    <span id="s2">🔍 Extracting grades...</span>
+    <span id="s3">🤖 Generating insights with Gemini...</span>
+    <span id="s4">✅ Preparing recommendations...</span>
+  </div>
+</div>
+
+<div class="rc-page">
+  <div style="margin-bottom:2rem;">
+    <p style="color:var(--text3);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.5rem;">AI-Powered</p>
+    <h1 class="page-title">Report Card <span>Analyzer</span></h1>
+    <p style="color:var(--text3);font-size:0.875rem;margin-top:0.4rem;">Upload a student's PDF report card and get personalized AI analysis powered by Gemini</p>
+  </div>
+
+  <div class="upload-card">
+    <form method="POST" action="{{ url_for('report_card') }}" enctype="multipart/form-data" onsubmit="startAnalysis()">
+      <div class="form-group">
+        <label class="form-label">Student Name (optional)</label>
+        <input type="text" name="student_name" class="form-control" placeholder="e.g. Rahul Gupta">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Report Card PDF</label>
+        <div class="drop-zone" id="dropZone">
+          <input type="file" name="report_pdf" id="pdfInput" accept=".pdf" onchange="fileSelected(this)" required>
+          <div class="drop-icon">📄</div>
+          <div class="drop-title">Drop PDF here or click to browse</div>
+          <div class="drop-sub">Only PDF files are supported · Max 16MB</div>
+        </div>
+        <div class="drop-selected" id="selectedFile" style="display:none;">
+          <span class="drop-selected-icon">✅</span>
+          <span class="drop-selected-name" id="selectedFileName"></span>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="feature-item-icon">📊</div>
+          <div class="feature-item-label">Grade Analysis</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-item-icon">💡</div>
+          <div class="feature-item-label">Smart Insights</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-item-icon">🎯</div>
+          <div class="feature-item-label">Study Plan</div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:1.5rem;font-size:1rem;">
+        🤖 Analyze with Gemini AI
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fileSelected(input) {
+  const file = input.files[0];
+  if (file) {
+    document.getElementById('selectedFile').style.display = 'flex';
+    document.getElementById('selectedFileName').textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+  }
+}
+
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault();
+  dz.classList.remove('drag-over');
+  const files = e.dataTransfer.files;
+  if (files.length && files[0].type === 'application/pdf') {
+    document.getElementById('pdfInput').files = files;
+    fileSelected(document.getElementById('pdfInput'));
+  }
+});
+
+function startAnalysis() {
+  document.getElementById('loadingOverlay').classList.add('show');
+  const steps = ['s1','s2','s3','s4'];
+  let i = 0;
+  const iv = setInterval(() => {
+    if (i > 0) document.getElementById(steps[i-1]).classList.remove('active');
+    if (i < steps.length) {
+      document.getElementById(steps[i]).classList.add('active');
+      i++;
+    } else clearInterval(iv);
+  }, 2500);
+}
+</script>
+{% endblock %}

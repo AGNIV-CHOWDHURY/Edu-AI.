@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Login — EduAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e1a;
+  --bg2: #111520;
+  --surface: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf0;
+  --text2: #9499a8;
+  --text3: #5e6374;
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --accent3: #34d399;
+  --radius: 14px;
+  --radius2: 20px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse 70% 60% at 10% 20%, rgba(56,189,248,0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 90% 80%, rgba(129,140,248,0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 30% 30% at 50% 50%, rgba(52,211,153,0.04) 0%, transparent 60%);
+  pointer-events:none;
+}
+/* floating orbs */
+.orb {
+  position:fixed;
+  border-radius:50%;
+  filter:blur(60px);
+  opacity:0.15;
+  animation:drift 12s ease-in-out infinite alternate;
+  pointer-events:none;
+}
+.orb1 { width:300px;height:300px;background:#38bdf8;top:-60px;left:-80px;animation-delay:0s; }
+.orb2 { width:250px;height:250px;background:#818cf8;bottom:-40px;right:-60px;animation-delay:4s; }
+.orb3 { width:180px;height:180px;background:#34d399;top:50%;left:60%;animation-delay:8s; }
+@keyframes drift {
+  from { transform:translateY(0) scale(1); }
+  to { transform:translateY(-30px) scale(1.1); }
+}
+
+.login-wrap {
+  position:relative;
+  z-index:10;
+  width:100%;
+  max-width:420px;
+  padding:1rem;
+}
+
+.login-header {
+  text-align:center;
+  margin-bottom:2rem;
+}
+.brand {
+  display:inline-flex;
+  align-items:center;
+  gap:0.5rem;
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  font-size:1.4rem;
+  color:var(--text);
+  text-decoration:none;
+  margin-bottom:1.5rem;
+}
+.brand-accent { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.login-icon {
+  width:64px;height:64px;
+  border-radius:18px;
+  background:linear-gradient(135deg,rgba(56,189,248,0.2),rgba(129,140,248,0.2));
+  border:1px solid rgba(56,189,248,0.3);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 1rem;
+  font-size:1.8rem;
+}
+h1 { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:700; margin-bottom:0.4rem; }
+.subtitle { color:var(--text2); font-size:0.9rem; }
+
+.card {
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:var(--radius2);
+  padding:2rem;
+  backdrop-filter:blur(20px);
+}
+.form-group { margin-bottom:1.25rem; }
+.form-label {
+  display:block;
+  font-size:0.78rem;
+  font-weight:500;
+  color:var(--text2);
+  margin-bottom:0.5rem;
+  text-transform:uppercase;
+  letter-spacing:0.07em;
+}
+.input-wrap { position:relative; }
+.input-icon {
+  position:absolute;left:0.9rem;top:50%;transform:translateY(-50%);
+  color:var(--text3);
+  pointer-events:none;
+}
+.form-control {
+  width:100%;
+  padding:0.85rem 1rem 0.85rem 2.6rem;
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-size:0.95rem;
+  transition:all 0.2s;
+  outline:none;
+}
+.form-control:focus {
+  border-color:var(--accent);
+  background:rgba(56,189,248,0.07);
+  box-shadow:0 0 0 3px rgba(56,189,248,0.15);
+}
+.form-control::placeholder { color:var(--text3); }
+
+.btn {
+  display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;
+  width:100%;
+  padding:0.9rem;
+  border-radius:var(--radius);
+  font-family:'DM Sans',sans-serif;
+  font-weight:600;
+  font-size:0.95rem;
+  cursor:pointer;
+  border:none;
+  transition:all 0.25s;
+  text-decoration:none;
+}
+.btn-student {
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:white;
+  box-shadow:0 4px 24px rgba(56,189,248,0.35);
+}
+.btn-student:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(56,189,248,0.5); }
+
+.divider { height:1px;background:var(--border);margin:1.5rem 0; }
+
+.links { text-align:center; font-size:0.85rem; color:var(--text2); }
+.links a { color:var(--accent); text-decoration:none; font-weight:500; }
+.links a:hover { text-decoration:underline; }
+
+.teacher-link {
+  display:flex;align-items:center;justify-content:center;gap:0.5rem;
+  margin-top:1rem;
+  padding:0.75rem;
+  border-radius:var(--radius);
+  border:1px solid var(--border);
+  color:var(--text2);
+  text-decoration:none;
+  font-size:0.85rem;
+  transition:all 0.2s;
+}
+.teacher-link:hover { border-color:var(--border2); color:var(--text); background:var(--surface); }
+
+.flash-container {
+  position:fixed;top:1.5rem;right:1.5rem;z-index:9999;
+  display:flex;flex-direction:column;gap:0.5rem;
+}
+.flash {
+  padding:0.8rem 1.2rem;border-radius:var(--radius);
+  font-size:0.875rem;font-weight:500;
+  backdrop-filter:blur(12px);border:1px solid;
+  animation:slideIn 0.3s ease;max-width:300px;
+}
+.flash.error { background:rgba(248,113,113,0.15);border-color:rgba(248,113,113,0.3);color:#fca5a5; }
+.flash.success { background:rgba(52,211,153,0.12);border-color:rgba(52,211,153,0.3);color:var(--accent3); }
+@keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+.badge-student {
+  display:inline-flex;align-items:center;gap:0.4rem;
+  padding:0.3rem 0.8rem;
+  background:rgba(56,189,248,0.12);
+  border:1px solid rgba(56,189,248,0.25);
+  border-radius:100px;
+  font-size:0.75rem;
+  color:var(--accent);
+  font-weight:600;
+  letter-spacing:0.04em;
+  margin-bottom:0.75rem;
+}
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-container">
+  {% for cat, msg in messages %}
+  <div class="flash {{ cat }}">{{ msg }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<div class="login-wrap">
+  <div class="login-header">
+    <div class="brand">Edu<span class="brand-accent">AI</span></div>
+    <div class="login-icon">🎓</div>
+    <div class="badge-student">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
+      Student Portal
+    </div>
+    <h1>Welcome Back</h1>
+    <p class="subtitle">Sign in to view your learning resources &amp; progress</p>
+  </div>
+
+  <div class="card">
+    <form method="POST">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+          </span>
+          <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-student">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Sign in to Portal
+      </button>
+    </form>
+
+    <div class="divider"></div>
+
+    <div class="links">
+      Don't have an account? <a href="{{ url_for('student_register') }}">Register here</a>
+    </div>
+  </div>
+
+  <a href="{{ url_for('login') }}" class="teacher-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Teacher Login
+  </a>
+</div>
+
+<script>
+setTimeout(() => {
+  document.querySelectorAll('.flash').forEach(el => {
+    el.style.opacity='0'; el.style.transform='translateX(100%)'; el.style.transition='all 0.4s';
+    setTimeout(() => el.remove(), 400);
+  });
+}, 4000);
+</script>
+</body>
+</html>

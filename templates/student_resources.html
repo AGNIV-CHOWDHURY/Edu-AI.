@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% block title %}Resources – {{ student.name }}{% endblock %}
+{% block extra_head %}
+<style>
+.res-page { padding: 5rem 2rem 3rem; max-width: 1180px; margin: 0 auto; }
+.page-header { margin-bottom: 2rem; }
+.page-header h1 { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; }
+.page-header p  { color:var(--text3); font-size:0.9rem; margin-top:0.3rem; }
+.student-pill { display:inline-flex; align-items:center; gap:0.5rem; background:var(--surface);
+  border:1px solid var(--border); border-radius:999px; padding:0.4rem 1rem;
+  font-size:0.85rem; margin-bottom:1rem; }
+.cat-badge { padding:0.2rem 0.7rem; border-radius:999px; font-size:0.75rem; font-weight:700; }
+.cat-Weak    { background:rgba(255,107,107,0.15); color:var(--danger); }
+.cat-Average { background:rgba(108,142,255,0.15); color:var(--accent); }
+.cat-Strong  { background:rgba(6,214,160,0.15);  color:var(--strong); }
+.marks-section { margin-bottom:2rem; }
+.marks-section h2 { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:1rem; }
+.marks-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:0.75rem; }
+.marks-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1rem; }
+.marks-subj { font-size:0.78rem; font-weight:600; color:var(--text2); margin-bottom:0.4rem; }
+.marks-score { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; line-height:1; }
+.marks-score.danger { color:var(--danger); }
+.marks-score.warning { color:#fbbf24; }
+.marks-score.ok { color:var(--strong); }
+.marks-bar { height:4px; border-radius:99px; background:rgba(255,255,255,0.07); margin-top:0.5rem; overflow:hidden; }
+.marks-fill { height:100%; border-radius:99px; }
+.fill-danger  { background:var(--danger); }
+.fill-warning { background:#fbbf24; }
+.fill-ok      { background:var(--strong); }
+.generate-btn { display:inline-flex; align-items:center; gap:0.5rem;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff; border:none; padding:0.75rem 1.5rem; border-radius:var(--radius);
+  cursor:pointer; font-weight:600; font-size:0.9rem; margin-bottom:2.5rem; text-decoration:none; }
+.generate-btn:hover { opacity:0.9; }
+.subject-group { margin-bottom:2.5rem; }
+.subject-label {
+  display:inline-flex; align-items:center; gap:0.5rem;
+  font-family:'Syne',sans-serif; font-size:0.85rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.08em;
+  padding:0.35rem 0.9rem; border-radius:99px; margin-bottom:1rem;
+}
+.label-high   { background:rgba(248,113,113,0.15); color:var(--danger); border:1px solid rgba(248,113,113,0.3); }
+.label-medium { background:rgba(56,189,248,0.15); color:var(--accent); border:1px solid rgba(56,189,248,0.3); }
+.label-low    { background:rgba(52,211,153,0.15); color:var(--strong); border:1px solid rgba(52,211,153,0.3); }
+.label-default{ background:var(--surface); color:var(--text2); border:1px solid var(--border); }
+.res-pair { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+@media(max-width:640px){ .res-pair { grid-template-columns:1fr; } }
+.res-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:1.25rem;
+  transition:transform 0.2s,border-color 0.2s;
+  display:flex; flex-direction:column; gap:0.5rem;
+}
+.res-card:hover { transform:translateY(-2px); border-color:var(--accent); }
+.res-card.book-card { border-left:3px solid var(--accent2); }
+.res-card.yt-card   { border-left:3px solid var(--danger); }
+.res-type-badge { display:inline-flex; align-items:center; gap:0.35rem;
+  font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;
+  padding:0.2rem 0.55rem; border-radius:99px; width:fit-content; }
+.badge-book { background:rgba(129,140,248,0.15); color:var(--accent2); }
+.badge-yt   { background:rgba(248,113,113,0.15); color:var(--danger); }
+.res-title  { font-weight:700; font-size:0.93rem; color:var(--text); line-height:1.35; }
+.res-reason { font-size:0.8rem; color:var(--text2); line-height:1.5; flex:1; }
+.res-link {
+  display:inline-flex; align-items:center; gap:0.35rem;
+  font-size:0.8rem; font-weight:600; color:var(--accent);
+  text-decoration:none; padding:0.4rem 0.8rem;
+  border:1px solid rgba(56,189,248,0.3); border-radius:8px;
+  transition:all 0.2s; width:fit-content; margin-top:0.25rem;
+}
+.res-link:hover { background:rgba(56,189,248,0.1); }
+.res-link.yt-link { color:var(--danger); border-color:rgba(248,113,113,0.3); }
+.res-link.yt-link:hover { background:rgba(248,113,113,0.1); }
+.empty-state { text-align:center; padding:3rem; color:var(--text3); }
+.back-link { color:var(--accent); text-decoration:none; font-size:0.85rem; margin-bottom:1.5rem; display:inline-block; }
+.divider { height:1px; background:var(--border); margin:1.5rem 0; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="res-page">
+  <a href="{{ url_for('student_result', student_id=student.id) }}" class="back-link">← Back to {{ student.name }}'s Profile</a>
+  <div class="page-header">
+    <h1>📚 Resource Recommendations</h1>
+    <p>Books &amp; YouTube videos curated from subject-wise marks analysis for {{ student.name }}</p>
+  </div>
+
+  <div class="student-pill">
+    <span>{{ student.name }}</span>
+    <span class="cat-badge cat-{{ student.category }}">{{ student.category }}</span>
+    {% if student.weak_areas and student.weak_areas != 'None' %}
+    <span style="color:var(--text3);">Weak: {{ student.weak_areas }}</span>
+    {% endif %}
+  </div>
+
+  {% if student.subject_marks %}
+  {% set sm = student.subject_marks | fromjson %}
+  {% if sm %}
+  <div class="marks-section">
+    <h2>📊 Subject-wise Marks</h2>
+    <div class="marks-grid">
+      {% for subj, score in sm.items() %}
+      {% if score < 50 %}{% set cls = 'danger' %}
+      {% elif score < 70 %}{% set cls = 'warning' %}
+      {% else %}{% set cls = 'ok' %}{% endif %}
+      <div class="marks-card">
+        <div class="marks-subj">{{ subj }}</div>
+        <div class="marks-score {{ cls }}">{{ score | int }}<span style="font-size:0.75rem;font-weight:400;color:var(--text3);">/100</span></div>
+        <div class="marks-bar"><div class="marks-fill fill-{{ cls }}" style="width:{{ score }}%;"></div></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="divider"></div>
+  {% endif %}
+  {% endif %}
+
+  <form action="{{ url_for('generate_resources', student_id=student.id) }}" method="POST">
+    <button type="submit" class="generate-btn">
+      ✨ {% if recommendations %}Regenerate Resources{% else %}Generate Books &amp; Videos{% endif %}
+    </button>
+  </form>
+
+  <!-- New feature quick-access buttons -->
+  <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:2rem;margin-top:-1rem;">
+    <a href="{{ url_for('study_notes', student_id=student.id) }}"
+       style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 1.1rem;
+              background:rgba(129,140,248,0.12);color:var(--accent2);
+              border:1px solid rgba(129,140,248,0.3);border-radius:var(--radius);
+              font-size:0.85rem;font-weight:600;text-decoration:none;">
+      🧠 AI Study Notes
+    </a>
+    {% if recommendations %}
+    <a href="{{ url_for('resource_feedback', student_id=student.id) }}"
+       style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 1.1rem;
+              background:rgba(6,214,160,0.1);color:var(--strong);
+              border:1px solid rgba(6,214,160,0.25);border-radius:var(--radius);
+              font-size:0.85rem;font-weight:600;text-decoration:none;">
+      📊 Rate &amp; Improve Resources
+    </a>
+    {% endif %}
+  </div>
+
+  {% if recommendations %}
+  {# Collect unique subjects preserving order #}
+  {% set subjects_seen = [] %}
+  {% for r in recommendations %}
+    {% set subj = r.get('subject', 'General') %}
+    {% if subj not in subjects_seen %}{% set _ = subjects_seen.append(subj) %}{% endif %}
+  {% endfor %}
+
+  {% for subject in subjects_seen %}
+    {% set group = [] %}
+    {% for r in recommendations %}
+      {% if r.get('subject', 'General') == subject %}{% set _ = group.append(r) %}{% endif %}
+    {% endfor %}
+    {% set priority = group[0].get('priority','medium') if group else 'medium' %}
+    <div class="subject-group">
+      <div class="subject-label label-{{ priority }}">
+        {% if priority == 'high' %}🔴{% elif priority == 'medium' %}🔵{% else %}🟢{% endif %}
+        {{ subject }}
+      </div>
+      <div class="res-pair">
+        {% for r in group %}
+        {% set is_yt = r.get('type','') == 'youtube' %}
+        <div class="res-card {{ 'yt-card' if is_yt else 'book-card' }}">
+          <div class="res-type-badge {{ 'badge-yt' if is_yt else 'badge-book' }}">
+            {{ '▶ YouTube' if is_yt else '📖 Book' }}
+          </div>
+          <div class="res-title">{{ r.get('title','') }}</div>
+          <div class="res-reason">{{ r.get('reason','') }}</div>
+          {% if r.get('url') %}
+          <a href="{{ r.url }}" target="_blank" rel="noopener"
+             class="res-link {{ 'yt-link' if is_yt else '' }}">
+            {{ 'Watch on YouTube →' if is_yt else 'Find Book →' }}
+          </a>
+          {% endif %}
+        </div>
+        {% endfor %}
+        {% if group | length % 2 == 1 %}<div></div>{% endif %}
+      </div>
+    </div>
+  {% endfor %}
+
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size:3rem;margin-bottom:1rem;">📭</div>
+    <p>No recommendations yet. Click <strong>Generate Books &amp; Videos</strong> above.</p>
+    <p style="font-size:0.82rem;margin-top:0.5rem;color:var(--text3);">Resources will be curated subject-by-subject based on marks.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Study Schedule Allocator{% endblock %}
+{% block extra_head %}
+<style>
+.budget-page { padding:5rem 2rem 2rem; max-width:1000px; margin:0 auto; }
+.page-header { margin-bottom:2rem; }
+.page-header h1 { font-family:'Syne',sans-serif; font-size:1.7rem; font-weight:800; }
+.page-header p  { color:var(--text3); font-size:0.9rem; margin-top:0.3rem; }
+.form-card { background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius2); padding:1.75rem; margin-bottom:2rem; }
+.form-card h2 { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:1.25rem; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+.form-group label { display:block; font-size:0.8rem; color:var(--text3); font-weight:600;
+  text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.4rem; }
+.form-group input, .form-group select {
+  width:100%; background:var(--bg); border:1px solid var(--border);
+  border-radius:var(--radius); padding:0.65rem 0.875rem; color:var(--text); font-size:0.9rem; }
+.form-group input:focus, .form-group select:focus { outline:none; border-color:var(--accent); }
+.helper-text { font-size:0.75rem; color:var(--text3); margin-top:0.3rem; }
+.submit-btn { background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff; border:none; padding:0.75rem 1.75rem; border-radius:var(--radius);
+  cursor:pointer; font-weight:600; font-size:0.9rem; width:100%; }
+.submit-btn:hover { opacity:0.9; }
+.past-plans h2 { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:1rem; }
+.plan-row { background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:1rem 1.25rem; display:flex;
+  align-items:center; justify-content:space-between; margin-bottom:0.5rem; }
+.plan-info strong { font-size:0.9rem; }
+.plan-info small { color:var(--text3); font-size:0.78rem; display:block; margin-top:0.1rem; }
+.view-btn { color:var(--accent); font-size:0.82rem; text-decoration:none; font-weight:600; }
+.student-count-row { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; }
+.count-chip { padding:0.3rem 0.8rem; border-radius:999px; font-size:0.8rem; font-weight:600; }
+.chip-weak { background:rgba(255,107,107,0.15); color:var(--danger); }
+.chip-avg { background:rgba(108,142,255,0.15); color:var(--accent); }
+.chip-strong { background:rgba(6,214,160,0.15); color:var(--strong); }
+.empty-state { text-align:center; padding:2rem; color:var(--text3); }
+.info-banner { background:rgba(108,142,255,0.08); border:1px solid rgba(108,142,255,0.2);
+  border-radius:var(--radius); padding:0.9rem 1.1rem; margin-bottom:1.5rem;
+  font-size:0.85rem; color:var(--text3); line-height:1.6; }
+.info-banner strong { color:var(--text); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="budget-page">
+  <div class="page-header">
+    <h1>📅 Study Schedule Allocator</h1>
+    <p>Enter study hours available — AI generates a personalised schedule per student based on their results</p>
+  </div>
+
+  <div class="student-count-row">
+    {% set weak_count = students | selectattr('category','equalto','Weak') | list | length %}
+    {% set avg_count = students | selectattr('category','equalto','Average') | list | length %}
+    {% set strong_count = students | selectattr('category','equalto','Strong') | list | length %}
+    <span class="count-chip chip-weak">{{ weak_count }} Weak</span>
+    <span class="count-chip chip-avg">{{ avg_count }} Average</span>
+    <span class="count-chip chip-strong">{{ strong_count }} Strong</span>
+  </div>
+
+  {% if not students %}
+  <div class="empty-state">
+    <div style="font-size:3rem;margin-bottom:1rem;">👥</div>
+    <p>Add students first to use the Study Schedule Allocator.</p>
+  </div>
+  {% else %}
+
+  <div class="info-banner">
+    💡 The AI will analyse each student's <strong>marks, attendance, and assignment completion</strong> and
+    distribute the available study hours into a day-by-day schedule — prioritising weaker areas and
+    giving more intensive slots to students who need the most support.
+  </div>
+
+  <div class="form-card">
+    <h2>Generate New Study Schedule</h2>
+    <form method="POST">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Schedule Name</label>
+          <input type="text" name="plan_name" value="Weekly Study Schedule" required>
+        </div>
+        <div class="form-group">
+          <label>Total Study Hours Available</label>
+          <input type="number" name="total_hours" value="10" min="1" max="168" step="0.5" required>
+          <div class="helper-text">Total hours the class has for self-study this week</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Study Days per Week</label>
+          <select name="study_days">
+            <option value="5" selected>5 days (Mon–Fri)</option>
+            <option value="6">6 days (Mon–Sat)</option>
+            <option value="7">7 days (All week)</option>
+            <option value="3">3 days (alternate)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Session Length (hours)</label>
+          <select name="session_length">
+            <option value="0.5">30 min sessions</option>
+            <option value="1">1 hour sessions</option>
+            <option value="1.5" selected>1.5 hour sessions</option>
+            <option value="2">2 hour sessions</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="submit-btn">🤖 Generate AI Study Schedule</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if past_plans %}
+  <div class="past-plans">
+    <h2>Past Schedules</h2>
+    {% for plan in past_plans %}
+    <div class="plan-row">
+      <div class="plan-info">
+        <strong>{{ plan.plan_name }}</strong>
+        <small>{{ plan.total_hours }}h total · {{ plan.created_at.strftime('%b %d, %Y') }}</small>
+      </div>
+      <a href="{{ url_for('budget_plan_detail', plan_id=plan.id) }}" class="view-btn">View →</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Import Results{% endblock %}
+{% block extra_head %}
+<style>
+.result-page { padding:5rem 2rem 2rem; max-width:1000px; margin:0 auto; }
+.page-header { margin-bottom:2rem; }
+.page-header h1 { font-family:'Syne',sans-serif; font-size:1.7rem; font-weight:800; }
+.page-header p  { color:var(--text3); font-size:0.9rem; margin-top:0.3rem; }
+.success-banner { background:rgba(6,214,160,0.1); border:1px solid rgba(6,214,160,0.3);
+  border-radius:var(--radius2); padding:1rem 1.5rem; display:flex; align-items:center;
+  gap:0.75rem; margin-bottom:2rem; }
+.success-banner span { color:var(--strong); font-weight:600; }
+.priority-table { background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius2); overflow:hidden; }
+.priority-table h2 { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700;
+  padding:1rem 1.5rem; border-bottom:1px solid var(--border); }
+table { width:100%; border-collapse:collapse; }
+th { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text3);
+  font-weight:600; padding:0.75rem 1.25rem; text-align:left; border-bottom:1px solid var(--border); }
+td { padding:0.9rem 1.25rem; font-size:0.88rem; border-bottom:1px solid var(--border); }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--bg); }
+.cat-badge { padding:0.2rem 0.7rem; border-radius:999px; font-size:0.75rem; font-weight:700; }
+.cat-Weak    { background:rgba(255,107,107,0.15); color:var(--danger); }
+.cat-Average { background:rgba(108,142,255,0.15); color:var(--accent); }
+.cat-Strong  { background:rgba(6,214,160,0.15); color:var(--strong); }
+.prio-badge  { padding:0.15rem 0.5rem; border-radius:4px; font-size:0.7rem; font-weight:700; }
+.prio-1 { background:rgba(255,107,107,0.2); color:var(--danger); }
+.prio-2 { background:rgba(255,170,60,0.2); color:#ffa83c; }
+.prio-3 { background:rgba(6,214,160,0.2); color:var(--strong); }
+.view-link { color:var(--accent); text-decoration:none; font-size:0.82rem; font-weight:600; }
+.action-bar { display:flex; gap:1rem; margin-top:1.5rem; }
+.btn { padding:0.7rem 1.4rem; border-radius:var(--radius); font-size:0.88rem;
+  font-weight:600; text-decoration:none; }
+.btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; }
+.btn-outline { border:1px solid var(--border); color:var(--text); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="result-page">
+  <div class="page-header">
+    <h1>✅ Import Complete</h1>
+    <p>Students imported and auto-prioritized by resource need</p>
+  </div>
+
+  <div class="success-banner">
+    <span>✓ {{ imported }} student(s) imported and analyzed successfully</span>
+  </div>
+
+  <div class="priority-table">
+    <h2>📊 Students Ranked by Resource Priority</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Priority</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Marks</th>
+          <th>Attendance</th>
+          <th>Assignments</th>
+          <th>Weak Areas</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        {% set prio = 1 if student.category == 'Weak' else (2 if student.category == 'Average' else 3) %}
+        <tr>
+          <td><span class="prio-badge prio-{{ prio }}">
+            {% if prio == 1 %}🔴 Critical{% elif prio == 2 %}🟡 Moderate{% else %}🟢 Low{% endif %}
+          </span></td>
+          <td><strong>{{ student.name }}</strong></td>
+          <td><span class="cat-badge cat-{{ student.category }}">{{ student.category }}</span></td>
+          <td>{{ student.marks }}</td>
+          <td>{{ student.attendance }}%</td>
+          <td>{{ student.assignments }}</td>
+          <td style="font-size:0.8rem;color:var(--text3);">{{ student.weak_areas or '—' }}</td>
+          <td><a href="{{ url_for('student_result', student_id=student.id) }}" class="view-link">View →</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="action-bar">
+    <a href="{{ url_for('bulk_import') }}" class="btn btn-outline">Import More</a>
+    <a href="{{ url_for('resource_budget') }}" class="btn btn-primary">⏱️ Create Budget Plan</a>
+    <a href="{{ url_for('intervention_groups') }}" class="btn btn-outline">👥 Plan Groups</a>
+  </div>
+</div>
+{% endblock %}

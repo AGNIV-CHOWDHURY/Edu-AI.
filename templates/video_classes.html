@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Video Classes{% endblock %}
+{% block content %}
+<style>
+.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
+.classes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:1.5rem; }
+.class-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius2); padding:1.5rem; display:flex; flex-direction:column; gap:1rem; transition:border-color .2s; }
+.class-card:hover { border-color:var(--border2); }
+.class-card.live { border-color:rgba(6,214,160,0.5); box-shadow:0 0 20px rgba(6,214,160,0.1); }
+.class-card.upcoming { border-color:rgba(108,142,255,0.4); }
+.class-card.past { opacity:.65; }
+.class-badge { display:inline-flex; align-items:center; gap:.4rem; padding:.25rem .75rem; border-radius:20px; font-size:.75rem; font-weight:600; letter-spacing:.04em; }
+.badge-live { background:rgba(6,214,160,0.15); color:#06d6a0; }
+.badge-upcoming { background:rgba(108,142,255,0.15); color:#6c8eff; }
+.badge-past { background:rgba(255,255,255,0.06); color:var(--text2); }
+.class-title { font-family:'Syne',sans-serif; font-size:1.15rem; font-weight:700; }
+.class-meta { display:flex; flex-wrap:wrap; gap:.75rem; font-size:.85rem; color:var(--text2); }
+.class-meta span { display:flex; align-items:center; gap:.35rem; }
+.class-desc { font-size:.9rem; color:var(--text2); line-height:1.6; }
+.class-actions { display:flex; gap:.75rem; flex-wrap:wrap; margin-top:auto; }
+.btn-join { background:linear-gradient(135deg,#06d6a0,#059b74); color:#fff; border:none; padding:.55rem 1.2rem; border-radius:10px; font-weight:600; cursor:pointer; text-decoration:none; font-size:.9rem; }
+.btn-join:hover { opacity:.9; }
+.btn-copy { background:var(--surface2); border:1px solid var(--border2); color:var(--text); padding:.55rem 1.2rem; border-radius:10px; font-weight:500; cursor:pointer; font-size:.9rem; }
+.btn-copy:hover { border-color:var(--accent); }
+.btn-del { background:transparent; border:1px solid rgba(255,107,107,0.3); color:var(--danger); padding:.55rem 1rem; border-radius:10px; font-weight:500; cursor:pointer; font-size:.85rem; margin-left:auto; }
+.btn-del:hover { background:rgba(255,107,107,0.1); }
+.empty-state { text-align:center; padding:4rem 2rem; background:var(--surface); border:1px dashed var(--border2); border-radius:var(--radius2); }
+.empty-state h3 { font-family:'Syne',sans-serif; font-size:1.4rem; margin-bottom:.75rem; }
+.empty-state p { color:var(--text2); margin-bottom:1.5rem; }
+.no-daily-banner { background:rgba(255,209,102,0.08); border:1px solid rgba(255,209,102,0.25); border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:2rem; font-size:.9rem; color:var(--warning); }
+.no-daily-banner a { color:var(--accent); }
+.copied { color:#06d6a0 !important; }
+</style>
+
+<div class="page-header">
+  <div>
+    <h1 style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;">📹 Video Classes</h1>
+    <p style="color:var(--text2);margin-top:.4rem;">Schedule and host live classes for your students</p>
+  </div>
+  <a href="{{ url_for('schedule_class') }}" class="btn-join" style="font-size:1rem;padding:.7rem 1.5rem;">+ Schedule Class</a>
+</div>
+
+{% if not daily_key %}
+<div class="no-daily-banner">
+  ⚠️ <strong>Daily.co API key not set.</strong> Classes will use direct room links instead of embedded video.
+  <a href="https://dashboard.daily.co/developers" target="_blank">Get a free Daily.co API key →</a>
+  and set <code>DAILY_API_KEY</code> in your Render environment variables.
+</div>
+{% endif %}
+
+{% with msgs = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in msgs %}
+    <div style="margin-bottom:1rem;padding:.9rem 1.2rem;border-radius:10px;background:{% if cat=='error' %}rgba(255,107,107,.12){% else %}rgba(6,214,160,.12){% endif %};border:1px solid {% if cat=='error' %}rgba(255,107,107,.3){% else %}rgba(6,214,160,.3){% endif %};color:{% if cat=='error' %}var(--danger){% else %}var(--strong){% endif %};">
+      {{ msg }}
+    </div>
+  {% endfor %}
+{% endwith %}
+
+{% if classes %}
+<div class="classes-grid">
+  {% for vc in classes %}
+    {% set diff = (vc.scheduled_at - now).total_seconds() %}
+    {% if diff > 600 %}
+      {% set status = "upcoming" %}
+      {% set badge_label = "Upcoming" %}
+    {% elif diff >= -vc.duration_minutes * 60 %}
+      {% set status = "live" %}
+      {% set badge_label = "🔴 Live Now" %}
+    {% else %}
+      {% set status = "past" %}
+      {% set badge_label = "Ended" %}
+    {% endif %}
+
+    <div class="class-card {{ status }}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;">
+        <div class="class-title">{{ vc.title }}</div>
+        <span class="class-badge badge-{{ status }}">{{ badge_label }}</span>
+      </div>
+
+      {% if vc.description %}
+        <div class="class-desc">{{ vc.description }}</div>
+      {% endif %}
+
+      <div class="class-meta">
+        <span>📅 {{ vc.scheduled_at.strftime('%b %d, %Y') }}</span>
+        <span>🕐 {{ vc.scheduled_at.strftime('%I:%M %p') }} UTC</span>
+        <span>⏱ {{ vc.duration_minutes }} min</span>
+      </div>
+
+      <div class="class-actions">
+        {% if status in ['live', 'upcoming'] %}
+          <a href="{{ url_for('join_class', class_id=vc.id) }}" class="btn-join">
+            {% if status == 'live' %}🟢 Start Class{% else %}🎥 Open Room{% endif %}
+          </a>
+
+          {% set student_url = request.host_url.rstrip('/') + url_for('student_join_class', class_id=vc.id) %}
+          <button class="btn-copy" onclick="copyLink(this, '{{ student_url }}')">📋 Copy Student Link</button>
+        {% else %}
+          <span style="font-size:.85rem;color:var(--text2);">Class ended</span>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('delete_class', class_id=vc.id) }}" style="margin-left:auto;"
+              onsubmit="return confirm('Delete this class?')">
+          <button type="submit" class="btn-del">🗑</button>
+        </form>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div style="font-size:3rem;margin-bottom:1rem;">🎥</div>
+  <h3>No classes scheduled yet</h3>
+  <p>Schedule your first live video class and share the link with students.</p>
+  <a href="{{ url_for('schedule_class') }}" class="btn-join">+ Schedule Your First Class</a>
+</div>
+{% endif %}
+
+<script>
+function copyLink(btn, url) {
+  navigator.clipboard.writeText(url).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+{% endblock %}

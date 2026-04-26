@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: eduai
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 120 app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      # ⚠️  IMPORTANT: Set SECRET_KEY manually in Render dashboard to a long
+      #    random string (e.g. run: python -c "import secrets; print(secrets.token_hex(32))")
+      #    DO NOT use generateValue: true — that regenerates on every deploy and
+      #    invalidates all user sessions, forcing everyone to re-register.
+      - key: SECRET_KEY
+        sync: false
+      # ⚠️  IMPORTANT: Use Render's PostgreSQL addon (not SQLite).
+      #    SQLite data is stored on Render's ephemeral disk and is wiped on
+      #    every deploy/restart.  Add a PostgreSQL database in the Render
+      #    dashboard and copy its Internal Database URL here as DATABASE_URL.
+      - key: DATABASE_URL
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: PINECONE_INDEX_NAME
+        value: eduai-students
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DAILY_API_KEY
+        sync: false
+      - key: FLASK_ENV
+        value: production
+
+databases:
+  - name: eduai-db
+    plan: free
