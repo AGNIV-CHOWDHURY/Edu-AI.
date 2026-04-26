@@ -6,7 +6,7 @@
 
 ## What is EduAI?
 
-EduAI is a full-stack web application built for teachers to manage student performance, allocate study resources intelligently, and generate AI-driven academic interventions. Every core intelligence feature runs on **Google's Gemini 2.5 Flash** model — from analysing student report cards to generating personalised study notes and smart resource recommendations.
+EduAI is a full-stack web application built for teachers to manage student performance, allocate study resources intelligently, and generate AI-driven academic interventions. Every core intelligence feature runs on **Google's Gemini 2.5 Flash** model — from analysing student report cards to generating personalised study notes and smart resource recommendations.It is based on the topic "SMART RESOURCE ALLOCATION"
 
 ---
 
